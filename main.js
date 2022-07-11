@@ -2,10 +2,10 @@ const puppeteer = require("puppeteer");
 const notifier = require("node-notifier");
 
 const SLEEP_MS = 3000;
-const TOKENS = ["DUSDT", "DUSDC", "DCRO", "DCOF"];
+const TOKENS = ["DUSDC", "DUSDT", "DCRO", "DCOF"];
 
 (async () => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({ headless: true });
   const pages = {};
   for (const token of TOKENS) {
     const page = await browser.newPage();
@@ -21,6 +21,9 @@ const TOKENS = ["DUSDT", "DUSDC", "DCRO", "DCOF"];
     const prices = {};
     for (const token of Object.keys(pages)) {
       const page = pages[token];
+      await page.bringToFront();
+      await sleep(SLEEP_MS);
+
       let price = await page.$eval("div.box-price span", (el) => el.innerHTML);
 
       if (!isNaN(price)) {
@@ -39,7 +42,6 @@ const TOKENS = ["DUSDT", "DUSDC", "DCRO", "DCOF"];
       `Watching prices for ${TOKENS.join(", ")} -- ${new Date().toDateString()}`
     );
     console.table(prices);
-    await sleep(SLEEP_MS);
   }
 
   await browser.close();
